@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊天室</title>
+<style>
+  :root { --bg: #fff8f3; --panel: #fff; --soft: #fffaf8; --line: #f0dfda; --text: #4b4050; --muted: #9d8e9a; --blue: #b9e1ee; --blue-deep: #9dcfdf; --mint: #c9eadb; --pink: #f5c6d7; --lavender: #d9d2ee; --peach: #ffe0c2; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { width: 100%; min-height: 100%; margin: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+  button, input { font: inherit; }
+  button { transition: transform .15s ease, background .15s ease; }
+  button:active { transform: translateY(1px); }
+  .center { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(135deg, #fff8f3, #f8f5ff); }
+  .card { width: min(100%, 780px); display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; box-shadow: 0 18px 50px rgba(110, 82, 100, .09); }
+  .card:before { content: "一间轻松聊天的小房间"; grid-column: 1 !important; display: flex; align-items: flex-end; padding: 42px; min-height: 410px; background: var(--lavender); color: #655b78; font-size: 26px; font-weight: 700; line-height: 1.35; }
+  .card > *:not(.logo) { grid-column: 2; }
+  .card .logo { position: absolute; margin: 42px 0 0 42px; width: 52px; height: 52px; border-radius: 17px; background: var(--peach); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 21px; }
+  .card h1 { margin: 48px 34px 6px; font-size: 23px; }
+  .card .sub { margin: 0 34px 25px; color: var(--muted); font-size: 13px; }
+  .card .tabs, .card input, .card .primary, .card .msg { margin-left: 34px; margin-right: 34px; width: calc(100% - 68px); min-width: 0; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tabs button { flex: 1; padding: 10px; border: 0; border-radius: 12px; background: var(--soft); color: var(--muted); cursor: pointer; }
+  .tabs button.active { background: var(--peach); color: var(--text); font-weight: 700; }
+  input[type=text], input[type=password] { width: 100%; padding: 13px 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); color: var(--text); outline: none; }
+  input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(185, 225, 238, .25); }
+  .primary { width: 100%; padding: 13px; border: 0; border-radius: 12px; background: var(--blue); color: var(--text); font-weight: 700; cursor: pointer; }
+  .primary:hover { background: var(--blue-deep); }
+  .msg { margin-top: 12px; min-height: 16px; font-size: 12px; }
+  .app { height: 100vh; min-height: 520px; display: flex; gap: 18px; padding: 22px; }
+  .sidebar { width: 250px; flex: 0 0 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; padding: 22px; display: flex; flex-direction: column; min-height: 0; }
+  .brand { font-size: 20px; font-weight: 800; margin-bottom: 24px; }
+  .brand:after { content: "."; color: #eea7bd; }
+  .me { display: flex; align-items: center; gap: 11px; padding: 12px; border-radius: 16px; background: var(--soft); margin-bottom: 24px; }
+  .avatar { flex: 0 0 42px; width: 42px; height: 42px; border-radius: 14px; background: var(--mint); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .me .name { font-weight: 700; }.me .status { font-size: 12px; color: #75a98f; margin-top: 3px; }.section-title { font-size: 11px; color: var(--muted); margin-bottom: 9px; letter-spacing: 1px; }.users { list-style: none; margin: 0; padding: 0; flex: 1; overflow-y: auto; }.users li { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 13px; cursor: pointer; margin-bottom: 4px; }.users li:hover { background: var(--soft); }.users li.active { background: var(--peach); }.users li.owner { border-left: 3px solid var(--pink); }.badge { font-size: 11px; background: var(--pink); padding: 3px 8px; border-radius: 10px; }.user-left { display: flex; align-items: center; gap: 8px; }.dot { width: 8px; height: 8px; border-radius: 50%; background: #d3d3d3; display: inline-block; flex: 0 0 8px; }.dot.on { background: #7fc7a4; }.ghost { margin-top: 14px; padding: 11px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--muted); cursor: pointer; }.ghost:hover { background: var(--soft); color: var(--text); }
+  .chat { flex: 1; min-width: 0; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; }.chat-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); }.chat-header .tabs { margin: 0; width: 260px; }.peer { white-space: nowrap; color: var(--muted); font-size: 12px; }.peer b { color: var(--text); }.messages { flex: 1; min-height: 0; padding: 24px; overflow-y: auto; background: var(--soft); }.row { display: flex; margin-bottom: 12px; }.row.mine { justify-content: flex-end; }.bubble { max-width: min(68%, 560px); padding: 11px 15px; border-radius: 16px 16px 16px 4px; background: var(--panel); border: 1px solid var(--line); word-break: break-word; line-height: 1.55; }.row.mine .bubble { background: var(--mint); border-color: var(--mint); border-radius: 16px 16px 4px 16px; }.bubble .meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }.bubble a { color: #477d91; font-weight: 700; }.chat-image { max-width: 220px; max-height: 220px; border-radius: 12px; display: block; }.composer { display: flex; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--line); }.composer input[type=text] { flex: 1; min-width: 0; margin: 0; }.composer .primary { width: auto; padding: 11px 24px; }.filebtn { display: flex; align-items: center; justify-content: center; padding: 0 15px; border-radius: 12px; border: 1px solid var(--line); background: var(--lavender); cursor: pointer; font-weight: 700; white-space: nowrap; }.filebtn:hover { background: var(--pink); }
+  @media (max-width: 700px) { .center { padding: 14px; align-items: flex-start; padding-top: 9vh; }.card { display: block; border-radius: 22px; }.card:before { display: none; }.card .logo { position: static; margin: 26px 26px 0; }.card h1 { margin: 16px 26px 6px; }.card .sub { margin-left: 26px; margin-right: 26px; }.card .tabs, .card input, .card .primary, .card .msg { margin-left: 26px; margin-right: 26px; width: calc(100% - 52px); }.app { height: 100dvh; min-height: 0; padding: 10px; gap: 10px; flex-direction: column; }.sidebar { width: 100%; flex: 0 0 auto; border-radius: 18px; padding: 12px; }.brand { display: none; }.me { margin: 0 0 10px; padding: 7px 9px; }.avatar { width: 36px; height: 36px; flex-basis: 36px; border-radius: 11px; }.section-title { margin: 0 0 5px 3px; }.users { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; min-height: 42px; }.users li { flex: 0 0 auto; margin: 0; padding: 9px 12px; background: var(--soft); }.ghost { position: absolute; right: 18px; top: 17px; margin: 0; padding: 7px 10px; }.chat { flex: 1; min-height: 0; border-radius: 18px; }.chat-header { padding: 12px; }.chat-header .tabs { width: 100%; }.peer { display: none; }.messages { padding: 16px 12px; }.bubble { max-width: 84%; }.composer { padding: 10px; gap: 7px; }.composer .primary { padding: 11px 15px; }.filebtn { padding: 0 10px; font-size: 12px; } }
+  @media (max-width: 390px) { .composer { flex-wrap: wrap; }.composer input[type=text] { order: 1; flex-basis: calc(100% - 75px); }.composer .primary { order: 1; flex: 1; }.filebtn { order: 0; height: 40px; }.privateComposer {} }
+</style>
+</head>
+<body>
+
+<div class="center" id="authView">
+  <div class="card">
+    <div class="logo">聊</div>
+    <h1>聊天室</h1>
+    <p class="sub">现在立刻给炒冰机发消息</p>
+    <div class="tabs">
+      <button class="tab active" data-mode="login">登录</button>
+      <button class="tab" data-mode="register">注册</button>
+    </div>
+    <input type="text" id="username" placeholder="用户名">
+    <input type="password" id="password" placeholder="密码">
+    <button class="primary" id="authBtn">登录</button>
+    <div class="msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div class="app" id="appView" hidden>
+  <aside class="sidebar">
+    <div class="brand">聊天室</div>
+    <div class="me">
+      <div class="avatar" id="myAvatar">?</div>
+      <div>
+        <div class="name" id="myName">-</div>
+        <div class="status">在线</div>
+      </div>
+    </div>
+    <div class="section-title">联系人</div>
+    <ul class="users" id="userList"></ul>
+    <button class="ghost" id="logoutBtn">退出登录</button>
+  </aside>
+
+  <main class="chat">
+    <header class="chat-header">
+      <div class="tabs">
+        <button class="tab active" data-pane="public">公共聊天</button>
+        <button class="tab" data-pane="private">私聊</button>
+      </div>
+      <div class="peer" id="peerLabel" hidden>对象：<b id="peerName">-</b></div>
+    </header>
+
+    <section class="messages" id="publicMessages"></section>
+    <section class="messages" id="privateMessages" hidden></section>
+
+    <div class="composer" id="publicComposer">
+      <label class="filebtn">发送文件<input type="file" id="publicFileInput" hidden></label>
+      <input type="text" id="publicInput" placeholder="说点什么（公共消息，所有人可见）">
+      <button class="primary" id="publicSend">发送</button>
+    </div>
+    <div class="composer" id="privateComposer" hidden>
+      <label class="filebtn">发送文件<input type="file" id="fileInput" hidden></label>
+      <input type="text" id="privateInput" placeholder="私聊内容">
+      <button class="primary" id="privateSend">发送</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let me = null, peer = null, pane = 'public', es = null, authMode = 'login', owner = '', onlineTimer = null;
+
+const authView = $('authView'), appView = $('appView');
+
+document.querySelectorAll('#authView .tab').forEach(btn => {
+  btn.onclick = () => {
+    authMode = btn.dataset.mode;
+    document.querySelectorAll('#authView .tab').forEach(x => x.classList.toggle('active', x === btn));
+    $('authBtn').textContent = authMode === 'login' ? '登录' : '注册';
+    $('authMsg').textContent = '';
+  };
+});
+
+$('authBtn').onclick = async () => {
+  const username = $('username').value.trim();
+  const password = $('password').value;
+  if (!username || !password) { showAuthMsg('请输入用户名和密码', true); return; }
+  const res = await fetch('/' + authMode, { method: 'POST', body: new URLSearchParams({ username, password }) });
+  const text = (await res.text()).trim();
+  if (text === 'ok') {
+    if (authMode === 'register') {
+      showAuthMsg('注册成功，请登录', false);
+      authMode = 'login';
+      document.querySelectorAll('#authView .tab').forEach(x => x.classList.toggle('active', x.dataset.mode === 'login'));
+      $('authBtn').textContent = '登录';
+    } else {
+      enterChat(username);
+    }
+  } else {
+    showAuthMsg(text, true);
+  }
+};
+
+function showAuthMsg(text, isError) {
+  const el = $('authMsg');
+  el.textContent = text;
+  el.style.color = isError ? '#C86B6B' : '#5B9E86';
+}
+
+async function enterChat(username) {
+  me = username;
+  authView.hidden = true;
+  appView.hidden = false;
+  $('myName').textContent = username;
+  $('myAvatar').textContent = username.charAt(0).toUpperCase();
+  await loadUsers();
+  await loadPublicHistory();
+  openStream();
+  if (onlineTimer) clearInterval(onlineTimer);
+  onlineTimer = setInterval(refreshOnline, 8000);
+}
+
+async function loadPublicHistory() {
+  const res = await fetch('/history/public');
+  const list = await res.json();
+  $('publicMessages').innerHTML = '';
+  list.forEach(renderMessage);
+}
+
+async function loadPrivateHistory(withUser) {
+  const res = await fetch('/history/private?with=' + encodeURIComponent(withUser));
+  const list = await res.json();
+  $('privateMessages').innerHTML = '';
+  list.forEach(renderMessage);
+}
+
+function openStream() {
+  if (es) es.close();
+  es = new EventSource('/stream');
+  es.onmessage = ev => {
+    try { renderMessage(JSON.parse(ev.data)); } catch (e) {}
+  };
+}
+
+async function loadUsers() {
+  const [usersRes, ownerRes] = await Promise.all([fetch('/users'), fetch('/owner')]);
+  const users = await usersRes.json();
+  owner = (await ownerRes.text()).trim();
+  const list = $('userList');
+  list.innerHTML = '';
+  const others = users.filter(u => u !== me);
+  const ordered = owner && others.includes(owner)
+    ? [owner].concat(others.filter(u => u !== owner))
+    : others;
+  ordered.forEach(u => {
+    const li = document.createElement('li');
+    li.dataset.user = u;
+    const left = document.createElement('span');
+    left.className = 'user-left';
+    const dot = document.createElement('i');
+    dot.className = 'dot';
+    const name = document.createElement('span');
+    name.textContent = u;
+    left.appendChild(dot);
+    left.appendChild(name);
+    li.appendChild(left);
+    if (u === owner) {
+      li.classList.add('owner');
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = '管理员';
+      li.appendChild(badge);
+    }
+    li.onclick = () => {
+      peer = u;
+      document.querySelectorAll('#userList li').forEach(x => x.classList.toggle('active', x === li));
+      $('peerName').textContent = u;
+      switchPane('private');
+      loadPrivateHistory(u);
+    };
+    list.appendChild(li);
+  });
+  await refreshOnline();
+}
+
+async function refreshOnline() {
+  try {
+    const res = await fetch('/online', { cache: 'no-store' });
+    const online = await res.json();
+    const set = new Set(online);
+    document.querySelectorAll('#userList li').forEach(li => {
+      const dot = li.querySelector('.dot');
+      if (dot) dot.classList.toggle('on', set.has(li.dataset.user));
+    });
+  } catch (e) {}
+}
+
+function switchPane(p) {
+  pane = p;
+  document.querySelectorAll('.chat-header .tab').forEach(x => x.classList.toggle('active', x.dataset.pane === p));
+  $('publicMessages').hidden = p !== 'public';
+  $('privateMessages').hidden = p !== 'private';
+  $('publicComposer').hidden = p !== 'public';
+  $('privateComposer').hidden = p !== 'private';
+  $('peerLabel').hidden = p !== 'private';
+}
+document.querySelectorAll('.chat-header .tab').forEach(btn => { btn.onclick = () => switchPane(btn.dataset.pane); });
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderMessage(msg) {
+  const isPublic = msg.type === 'public' || !msg.receiver;
+  const container = isPublic ? $('publicMessages') : $('privateMessages');
+  const mine = msg.sender === me;
+  const row = document.createElement('div');
+  row.className = 'row ' + (mine ? 'mine' : 'theirs');
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  let meta = '';
+  if (isPublic) meta = '<div class="meta">' + esc(msg.sender) + '</div>';
+  else meta = '<div class="meta">' + (mine ? '发给 ' + esc(msg.receiver) : esc(msg.sender)) + '</div>';
+  let body;
+  if (msg.type === 'file') {
+    const url = esc(msg.fileUrl);
+    const label = esc(msg.content);
+    if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(msg.content || '')) {
+      body = '<a href="' + url + '" target="_blank" rel="noopener"><img class="chat-image" src="' + url + '" alt="' + label + '"></a>';
+    } else {
+      body = '<a href="' + url + '" target="_blank" rel="noopener">' + label + '</a>';
+    }
+  } else {
+    body = esc(msg.content);
+  }
+  bubble.innerHTML = meta + '<div class="text">' + body + '</div>';
+  row.appendChild(bubble);
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+$('publicSend').onclick = async () => {
+  const content = $('publicInput').value.trim();
+  if (!content) return;
+  await fetch('/sendPublic', { method: 'POST', body: new URLSearchParams({ content }) });
+  $('publicInput').value = '';
+};
+$('publicInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('publicSend').click(); });
+
+$('publicFileInput').onchange = async () => {
+  const file = $('publicFileInput').files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/sendPublicFile', { method: 'POST', body: fd });
+  const text = (await res.text()).trim();
+  if (text !== 'ok') alert(text);
+  $('publicFileInput').value = '';
+};
+
+$('privateSend').onclick = async () => {
+  if (!peer) { alert('请先在左侧选择一个联系人'); return; }
+  const content = $('privateInput').value.trim();
+  if (!content) return;
+  await fetch('/sendPrivate', { method: 'POST', body: new URLSearchParams({ to: peer, content }) });
+  $('privateInput').value = '';
+};
+$('privateInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('privateSend').click(); });
+
+$('fileInput').onchange = async () => {
+  if (!peer) { alert('请先在左侧选择一个联系人'); $('fileInput').value = ''; return; }
+  const file = $('fileInput').files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('to', peer);
+  fd.append('file', file);
+  const res = await fetch('/sendFile', { method: 'POST', body: fd });
+  const text = (await res.text()).trim();
+  if (text !== 'ok') alert(text);
+  $('fileInput').value = '';
+};
+
+$('logoutBtn').onclick = async () => {
+  await fetch('/logout', { method: 'POST' });
+  if (es) { es.close(); es = null; }
+  location.reload();
+};
+
+(async () => {
+  const res = await fetch('/me');
+  const name = (await res.text()).trim();
+  if (name) enterChat(name);
+})();
+</script>
+</body>
+</html>
